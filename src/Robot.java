@@ -1,8 +1,6 @@
 import java.util.ArrayList;
 
 import javafx.animation.AnimationTimer;
-import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
@@ -14,7 +12,7 @@ import javafx.scene.shape.Rectangle;
 
 public class Robot extends Group {
 
-	private int squareSize;
+	private double squareSize;
 	private AnimationTimer at;
 
 	private enum State {
@@ -61,13 +59,13 @@ public class Robot extends Group {
 		body.setLength(180 + 2 * BACK_ANGLE);
 		body.setFill(GRAY);
 
-		Circle leftEye = new Circle();
+		Eye leftEye = new Eye();
 		leftEye.setRadius(EYE_RADIUS);
 		leftEye.setCenterX(MIDDLE - BODY_RADIUS * Math.cos(Math.toRadians(90 - EYE_ANGLE)));
 		leftEye.setCenterY(MIDDLE - BODY_RADIUS * Math.sin(Math.toRadians(90 - EYE_ANGLE)));
 		leftEye.setFill(color);
 
-		Circle rightEye = new Circle();
+		Eye rightEye = new Eye();
 		rightEye.setRadius(EYE_RADIUS);
 		rightEye.setCenterX(MIDDLE + BODY_RADIUS * Math.cos(Math.toRadians(90 - EYE_ANGLE)));
 		rightEye.setCenterY(MIDDLE - BODY_RADIUS * Math.sin(Math.toRadians(90 - EYE_ANGLE)));
@@ -137,6 +135,12 @@ public class Robot extends Group {
 			addToStack(Operation.MOVE_FORWARD);
 			return;
 		}
+
+		if (checkCollision(this.getScene().getRoot())) {
+			setState(State.FREE);
+			return;
+		}
+
 		setState(State.BUSY);
 		moveForwardAnimation();
 	}
@@ -233,7 +237,9 @@ public class Robot extends Group {
 	public boolean checkCollision(Node n) {
 
 		if (n.equals(this)) {
-			System.out.println("THIS");
+			return false;
+		} else if (n instanceof NotCollidable) {
+			System.out.println(n.getClass().getSimpleName());
 			return false;
 		}
 
@@ -258,44 +264,49 @@ public class Robot extends Group {
 		} else {
 			double nodeWidth = n.getBoundsInLocal().getWidth();
 			double nodeHeight = n.getBoundsInLocal().getHeight();
-			
-			return this.getBoundsInLocal().intersects(minX, minY, nodeWidth, nodeHeight);
+			if (n instanceof Circle) {
+				minX -= ((Circle) n).getRadius();
+				minY -= ((Circle) n).getRadius();
+			}
+			if (nodeHeight == 0 && nodeWidth == 0) {
+				return false;
+			}
+			if (this.collides(minX, minY, nodeWidth, nodeHeight)) {
+				((Rectangle)n).setFill(Color.PINK);
+				return true;
+			}
 		}
 
 		return false;
 
 	}
 
-	private Position getPos() {
-		
-		double minX = this.getTranslateX();
-		double minY = this.getTranslateY();
+	private boolean collides(double minX, double minY, double nodeWidth, double nodeHeight) {
+
+		double xPos = this.getTranslateX();
+		double yPos = this.getTranslateY();
 		Node parent = this.getParent();
 		while (!parent.getStyleClass().toString().equals("root")) {
-			minX += parent.getTranslateX();
-			minY += parent.getTranslateY();
+			xPos += parent.getTranslateX();
+			yPos += parent.getTranslateY();
 			parent = parent.getParent();
 		}
-		
-		return new Position(minX,minY);
+
+		xPos += Math.cos(Math.toRadians(270 + getRotate())) * squareSize;
+		yPos += Math.sin(Math.toRadians(270 + getRotate())) * squareSize;
+
+		double width = this.getBoundsInLocal().getWidth();
+		double height = this.getBoundsInLocal().getHeight();
+
+		Rectangle r1 = new Rectangle(xPos+1, yPos, width, height);
+		return r1.intersects(minX, minY, nodeWidth, nodeHeight);
 
 	}
+
 }
 
-class Position{
-	
-	private double xPos;
-	private double yPos;
-	
-	protected Position(double x, double y){
-		this.xPos = x;
-		this.yPos = y;
-	}
-	
-	protected double getMinX(){
-		return this.xPos;
-	}
-	protected double getMinY(){
-			return this.yPos;
-	}
+interface NotCollidable {
+}
+
+class Eye extends Circle implements NotCollidable {
 }

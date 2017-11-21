@@ -4,8 +4,8 @@ import javafx.stage.Stage;
 
 public class main extends Application {
 
-	public final static double WORLD_WIDTH = 1100;
-	public final static double WORLD_HEIGHT = 600;
+	public final static double WORLD_WIDTH = 1100*2;
+	public final static double WORLD_HEIGHT = 600*2;
 	
 	private RobotGame robotScene = new RobotGame();
 	

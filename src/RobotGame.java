@@ -7,7 +7,7 @@ import javafx.scene.shape.Rectangle;
 
 public class RobotGame extends Scene {
 
-	private static Group root = new Group();
+	public static Group root = new Group();
 	public static int squareSize = 50;
 
 	private int level = 1;
@@ -19,29 +19,21 @@ public class RobotGame extends Scene {
 		Robot r1 = new Robot(squareSize);
 		Robot r2 = new Robot(Color.BLUE,squareSize);
 		Robot r3 = new Robot(Color.GREEN,squareSize);
-		root.getChildren().addAll(r1,r2,r3);
 		
-		Group g = new Group();
-		root.getChildren().add(g);
-		g.setTranslateX(100);
+		r1.setTranslateX(100);
+		r2.setTranslateX(400);
+		r3.setTranslateX(300);
 		
-		Group g2 = new Group();
-		g.getChildren().add(g2);
-		g2.setTranslateY(100);
+		Group robots = new Group(r1,r2,r3);
+		robots.setTranslateX(200);
+		robots.setTranslateY(200);
+		root.getChildren().addAll(robots);
+		Wall w = new Wall();
 		
-		Group g3 = new Group();
-		g2.getChildren().add(g3);
-		g3.setTranslateX(-50);
-		g3.setTranslateY(100);
+		w.setTranslateX(400);
+		w.setTranslateY(200);
 		
-		Rectangle r = new Rectangle(0,0,-1,-1);
-		g3.getChildren().add(r);
-		r1.checkCollision(root);
-		r1.checkCollision(g);
-		r1.checkCollision(g2);
-		r1.checkCollision(g3);
-		r1.checkCollision(r);
-		root.getChildren().add(new Circle(200,200,10));
+		root.getChildren().add(w);
 	}
 
 	private void generateLevel1() {
@@ -54,7 +46,7 @@ public class RobotGame extends Scene {
 
 	private void generateMap(char[][] map) {
 
-		squareSize = 50;
+		squareSize = 50*2;
 		
 		for (int r = 0; r < map.length; r++) {
 
