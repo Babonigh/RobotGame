@@ -1,7 +1,10 @@
 import java.util.ArrayList;
 
 import javafx.animation.AnimationTimer;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
@@ -18,12 +21,11 @@ public class Robot extends Group {
 		BUSY, FREE
 	};
 
-	private State state = State.FREE;
-
 	private enum Operation {
 		ROTATE_LEFT, ROTATE_RIGHT, MOVE_FORWARD
 	};
 
+	private State state = State.FREE;
 	private ArrayList<Operation> stack = new ArrayList<Operation>();
 
 	public Robot(int size) {
@@ -31,11 +33,11 @@ public class Robot extends Group {
 	}
 
 	public Robot(Color color, int size) {
-		
+
 		this.squareSize = size;
 		final Color GRAY = Color.GRAY;
 
-		final double SIZE = squareSize-2;
+		final double SIZE = squareSize - 2;
 		final double MIDDLE = SIZE / 2;
 		final double BODY_RADIUS = (SIZE - SIZE / 4) / 2;
 		final double EYE_ANGLE = 20;
@@ -44,7 +46,7 @@ public class Robot extends Group {
 
 		this.setTranslateX(1);
 		this.setTranslateY(1);
-		
+
 		Rectangle bg = new Rectangle();
 		bg.setWidth(SIZE);
 		bg.setHeight(SIZE);
@@ -85,15 +87,14 @@ public class Robot extends Group {
 
 		this.getChildren().addAll(bg, rightEye, leftEye, wheels, body, triangle);
 
-		this.setOnMouseClicked(event->{
-			
-			if(event.getButton() == MouseButton.PRIMARY){
+		this.setOnMouseClicked(event -> {
+
+			if (event.getButton() == MouseButton.PRIMARY) {
 				this.rotateLeft();
-			}
-			else{
+			} else {
 				this.moveForward();
 			}
-			
+
 		});
 	}
 
@@ -229,4 +230,72 @@ public class Robot extends Group {
 		stack.add(o);
 	}
 
+	public boolean checkCollision(Node n) {
+
+		if (n.equals(this)) {
+			System.out.println("THIS");
+			return false;
+		}
+
+		double minX = n.getTranslateX();
+		double minY = n.getTranslateY();
+		Node parent = null;
+		if (!n.getStyleClass().toString().equals("root")) {
+			parent = n.getParent();
+			while (!parent.getStyleClass().toString().equals("root")) {
+				minX += parent.getTranslateX();
+				minY += parent.getTranslateY();
+				parent = parent.getParent();
+			}
+		}
+
+		if (n instanceof Group) {
+			for (Node childNode : ((Group) n).getChildren()) {
+				if (checkCollision(childNode)) {
+					return true;
+				}
+			}
+		} else {
+			double nodeWidth = n.getBoundsInLocal().getWidth();
+			double nodeHeight = n.getBoundsInLocal().getHeight();
+			
+			return this.getBoundsInLocal().intersects(minX, minY, nodeWidth, nodeHeight);
+		}
+
+		return false;
+
+	}
+
+	private Position getPos() {
+		
+		double minX = this.getTranslateX();
+		double minY = this.getTranslateY();
+		Node parent = this.getParent();
+		while (!parent.getStyleClass().toString().equals("root")) {
+			minX += parent.getTranslateX();
+			minY += parent.getTranslateY();
+			parent = parent.getParent();
+		}
+		
+		return new Position(minX,minY);
+
+	}
+}
+
+class Position{
+	
+	private double xPos;
+	private double yPos;
+	
+	protected Position(double x, double y){
+		this.xPos = x;
+		this.yPos = y;
+	}
+	
+	protected double getMinX(){
+		return this.xPos;
+	}
+	protected double getMinY(){
+			return this.yPos;
+	}
 }

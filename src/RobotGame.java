@@ -2,6 +2,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 public class RobotGame extends Scene {
@@ -19,6 +20,28 @@ public class RobotGame extends Scene {
 		Robot r2 = new Robot(Color.BLUE,squareSize);
 		Robot r3 = new Robot(Color.GREEN,squareSize);
 		root.getChildren().addAll(r1,r2,r3);
+		
+		Group g = new Group();
+		root.getChildren().add(g);
+		g.setTranslateX(100);
+		
+		Group g2 = new Group();
+		g.getChildren().add(g2);
+		g2.setTranslateY(100);
+		
+		Group g3 = new Group();
+		g2.getChildren().add(g3);
+		g3.setTranslateX(-50);
+		g3.setTranslateY(100);
+		
+		Rectangle r = new Rectangle(0,0,-1,-1);
+		g3.getChildren().add(r);
+		r1.checkCollision(root);
+		r1.checkCollision(g);
+		r1.checkCollision(g2);
+		r1.checkCollision(g3);
+		r1.checkCollision(r);
+		root.getChildren().add(new Circle(200,200,10));
 	}
 
 	private void generateLevel1() {
