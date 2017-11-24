@@ -1,52 +1,48 @@
+import java.util.ArrayList;
+
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 public class RobotGame extends Scene {
 
-	public static Group root = new Group();
-	public static int squareSize = 50;
+	private static Group root = new Group();
+	public static double SQUARE_SIZE;
+	
+	private final double WORLD_WIDTH;
+	private final double WORLD_HEIGHT;
+	
+	public static int level = 1;
+	private ArrayList<Robot> robots = new ArrayList<Robot>();
 
-	private int level = 1;
-	private Robot[] robots;
+	public RobotGame(double width, double height) {
+		
+		super(root, width, height);
+		this.WORLD_WIDTH = width;
+		this.WORLD_HEIGHT = height;
 
-	public RobotGame() {
-		super(root, main.WORLD_WIDTH, main.WORLD_HEIGHT);
 		generateLevel(level);
-		Robot r1 = new Robot(squareSize);
-		Robot r2 = new Robot(Color.BLUE,squareSize);
-		Robot r3 = new Robot(Color.GREEN,squareSize);
 		
-		r1.setTranslateX(100);
-		r2.setTranslateX(400);
-		r3.setTranslateX(300);
-		
-		Group robots = new Group(r1,r2,r3);
-		robots.setTranslateX(200);
-		robots.setTranslateY(200);
-		root.getChildren().addAll(robots);
-		Wall w = new Wall();
-		
-		w.setTranslateX(400);
-		w.setTranslateY(200);
-		
-		root.getChildren().add(w);
 	}
 
 	private void generateLevel1() {
 
-		robots = new Robot[1];
+		Map level = new Map(Maps.map1);
 		
-		generateMap(Maps.map1);
+		generateMap(level);
 
 	}
 
-	private void generateMap(char[][] map) {
+	private void generateMap(Map level) {
 
-		squareSize = 50*2;
+		double squareLength = WORLD_WIDTH/level.getLength();
+		double squareHeight = WORLD_HEIGHT/level.getHeight();
+			
+		SQUARE_SIZE = Math.min(squareHeight,squareLength);
+
+		char[][] map = level.getMapArray();
 		
 		for (int r = 0; r < map.length; r++) {
 
@@ -55,8 +51,8 @@ public class RobotGame extends Scene {
 			for (int c = 0; c < tiles.length; c++) {
 
 				Node t = generateTile(tiles[c]);
-				t.setTranslateX(c*squareSize);
-				t.setTranslateY(r*squareSize);
+				t.setTranslateX(t.getTranslateX() + c * SQUARE_SIZE);
+				t.setTranslateY(t.getTranslateY() + r * SQUARE_SIZE);
 				root.getChildren().add(t);
 			}
 
@@ -69,6 +65,12 @@ public class RobotGame extends Scene {
 		switch (type) {
 		case '#':
 			return new Wall();
+		case 'R':
+			Robot robot = new Robot(SQUARE_SIZE);
+			robots.add(robot);
+			return robot;
+		case 'o':
+			return new Circle(50);
 		default:
 			return new Rectangle();
 		}
@@ -88,3 +90,7 @@ public class RobotGame extends Scene {
 	}
 
 }
+
+
+
+

@@ -1,40 +1,42 @@
 import javafx.scene.Group;
 
-public class Map extends Group{
+public class Map extends Group {
 
-	private int width;
-	private int height;
-	private double squareSize;
-	
-	private void generateMap1(){
+	private int mapLength;
+	private int mapHeight;
+
+	private char[][] map;
+
+	public Map(char[][] arr) {
+
+		map = arr;
 		
-		
-		
-		
-	}
-	
-	public Map(int n){
-		
-		
-		
-		
-	}
-	
-	
-	
-	public int getHeight(){
-		return this.height;
+		this.mapLength = identifyMaxLength();
+		this.mapHeight = map.length;
+
 	}
 
-	public int getWidth(){
-		return this.width;
-	}
-	
-	public double getSquareSize(){
-		return this.squareSize;
+	private int identifyMaxLength() {
+		int maxLength = 0;
+		for (int i = 0; i < map.length; i++) {
+			int length = map[i].length;
+			if (length > maxLength) {
+				maxLength = length;
+			}
+		}
+		return maxLength;
 	}
 
+	public int getHeight() {
+		return this.mapHeight;
+	}
+
+	public int getLength() {
+		return this.mapLength;
+	}
 	
-	
-	
+	public char[][] getMapArray(){
+		return map;
+	}
+
 }

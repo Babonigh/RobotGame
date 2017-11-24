@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
@@ -12,43 +13,61 @@ import javafx.scene.shape.Rectangle;
 
 public class Robot extends Group {
 
-	private double squareSize;
+	private final double SQUARE_SIZE;
 	private AnimationTimer at;
+	private static int NUMBER_OF_ROBOTS = 0;
 
-	private enum State {
-		BUSY, FREE
-	};
-
-	private enum Operation {
-		ROTATE_LEFT, ROTATE_RIGHT, MOVE_FORWARD
-	};
-
+	private Color color;
 	private State state = State.FREE;
 	private ArrayList<Operation> stack = new ArrayList<Operation>();
 
-	public Robot(int size) {
-		this(Color.RED, size);
+	private void choseColor() {
+		switch (NUMBER_OF_ROBOTS) {
+		case 1:
+			color = Color.RED;
+			break;
+		case 2:
+			color = Color.BLUE;
+			break;
+		case 3:
+			color = Color.LIMEGREEN;
+			break;
+		case 4:
+			color = Color.PINK;
+			break;
+		case 5:
+			color = Color.SANDYBROWN;
+			break;
+		default:
+			color = Color.BLACK;
+			break;
+		}
+
 	}
 
-	public Robot(Color color, int size) {
+	public Robot(double size) {
 
-		this.squareSize = size;
+		NUMBER_OF_ROBOTS++;
+
+		choseColor();
+
+		this.setTranslateX(1);
+		this.setTranslateY(1);
+
+		this.SQUARE_SIZE = size;
 		final Color GRAY = Color.GRAY;
 
-		final double SIZE = squareSize - 2;
+		final double SIZE = SQUARE_SIZE - 2;
 		final double MIDDLE = SIZE / 2;
 		final double BODY_RADIUS = (SIZE - SIZE / 4) / 2;
 		final double EYE_ANGLE = 20;
 		final double BACK_ANGLE = 60;
 		final double EYE_RADIUS = SIZE / 15;
-
-		this.setTranslateX(1);
-		this.setTranslateY(1);
-
+		final double WHEEL_SIZE = 0.9 * SIZE;
 		Rectangle bg = new Rectangle();
 		bg.setWidth(SIZE);
 		bg.setHeight(SIZE);
-		bg.setFill(Color.TRANSPARENT);
+		bg.setFill(Color.ORANGE);
 
 		Arc body = new Arc();
 		body.setRadiusX(BODY_RADIUS);
@@ -63,25 +82,25 @@ public class Robot extends Group {
 		leftEye.setRadius(EYE_RADIUS);
 		leftEye.setCenterX(MIDDLE - BODY_RADIUS * Math.cos(Math.toRadians(90 - EYE_ANGLE)));
 		leftEye.setCenterY(MIDDLE - BODY_RADIUS * Math.sin(Math.toRadians(90 - EYE_ANGLE)));
-		leftEye.setFill(color);
+		leftEye.setFill(this.color);
 
 		Eye rightEye = new Eye();
 		rightEye.setRadius(EYE_RADIUS);
 		rightEye.setCenterX(MIDDLE + BODY_RADIUS * Math.cos(Math.toRadians(90 - EYE_ANGLE)));
 		rightEye.setCenterY(MIDDLE - BODY_RADIUS * Math.sin(Math.toRadians(90 - EYE_ANGLE)));
-		rightEye.setFill(color);
+		rightEye.setFill(this.color);
 
 		Rectangle wheels = new Rectangle();
-		wheels.setWidth(9 / 10d * SIZE);
+		wheels.setWidth(WHEEL_SIZE);
 		wheels.setHeight(BODY_RADIUS * Math.sin(Math.toRadians(BACK_ANGLE)) * 1.5);
-		wheels.setTranslateX((SIZE - wheels.getWidth()) / 2d);
+		wheels.setTranslateX((SIZE - WHEEL_SIZE) / 2);
 		wheels.setTranslateY(MIDDLE - wheels.getHeight() / 2);
-		wheels.setFill(color);
+		wheels.setFill(this.color);
 
 		Polygon triangle = new Polygon(MIDDLE + BODY_RADIUS / 2, MIDDLE, MIDDLE - BODY_RADIUS / 2, MIDDLE, MIDDLE,
 				MIDDLE - Math.sqrt(3) * (BODY_RADIUS / 2));
 		triangle.setTranslateY(Math.sqrt(3) * (BODY_RADIUS / 6));
-		triangle.setFill(color);
+		triangle.setFill(this.color);
 
 		this.getChildren().addAll(bg, rightEye, leftEye, wheels, body, triangle);
 
@@ -94,6 +113,15 @@ public class Robot extends Group {
 			}
 
 		});
+	}
+
+	/**
+	 * Ask for the
+	 * 
+	 * @return the current stack of the Robot
+	 */
+	public ArrayList<Operation> getStack() {
+		return this.stack;
 	}
 
 	private void checkStack() {
@@ -124,12 +152,21 @@ public class Robot extends Group {
 
 	}
 
+	/**
+	 * Move the Robot forward n tiles.
+	 * 
+	 * @param n
+	 *            number of tiles to move the Robot forward.
+	 */
 	public void moveForward(int n) {
 		for (int i = 0; i < n; i++) {
 			moveForward();
 		}
 	}
 
+	/**
+	 * Move the Robot forward one tile.
+	 */
 	public void moveForward() {
 		if (isBusy()) {
 			addToStack(Operation.MOVE_FORWARD);
@@ -206,7 +243,7 @@ public class Robot extends Group {
 				setTranslateX(Math.cos(Math.toRadians(270 + getRotate())) + getTranslateX());
 				setTranslateY(Math.sin(Math.toRadians(270 + getRotate())) + getTranslateY());
 				move++;
-				if (move == squareSize) {
+				if (move == SQUARE_SIZE) {
 					setState(State.FREE);
 					this.stop();
 				}
@@ -234,76 +271,83 @@ public class Robot extends Group {
 		stack.add(o);
 	}
 
-	public boolean checkCollision(Node n) {
+	private boolean checkCollision(Node n) {
 
 		if (n.equals(this)) {
 			return false;
 		} else if (n instanceof NotCollidable) {
-			System.out.println(n.getClass().getSimpleName());
 			return false;
-		}
-
-		double minX = n.getTranslateX();
-		double minY = n.getTranslateY();
-		Node parent = null;
-		if (!n.getStyleClass().toString().equals("root")) {
-			parent = n.getParent();
-			while (!parent.getStyleClass().toString().equals("root")) {
-				minX += parent.getTranslateX();
-				minY += parent.getTranslateY();
-				parent = parent.getParent();
-			}
-		}
-
-		if (n instanceof Group) {
-			for (Node childNode : ((Group) n).getChildren()) {
+		} else if (n instanceof Group) {
+			for (Node childNode : ((Parent) n).getChildrenUnmodifiable()) {
 				if (checkCollision(childNode)) {
 					return true;
 				}
 			}
 		} else {
+
+			double minX = n.getTranslateX();
+			double minY = n.getTranslateY();
+			Parent parent = n.getParent();
+			while ((parent != null)) {
+				minX += parent.getTranslateX();
+				minY += parent.getTranslateY();
+				parent = parent.getParent();
+			}
+
 			double nodeWidth = n.getBoundsInLocal().getWidth();
 			double nodeHeight = n.getBoundsInLocal().getHeight();
-			if (n instanceof Circle) {
-				minX -= ((Circle) n).getRadius();
-				minY -= ((Circle) n).getRadius();
-			}
-			if (nodeHeight == 0 && nodeWidth == 0) {
+			minX += n.getBoundsInParent().getMinX();
+			minY += n.getBoundsInParent().getMinY();
+			
+//			if (n instanceof Circle) {
+//				minX -= ((Circle) n).getRadius();
+//				minY -= ((Circle) n).getRadius();
+//			}
+			if (nodeHeight == 0 || nodeWidth == 0) {
 				return false;
 			}
 			if (this.collides(minX, minY, nodeWidth, nodeHeight)) {
-				((Rectangle)n).setFill(Color.PINK);
+				System.out.println(n.getBoundsInParent().getMinX());
+				System.out.println("COLLISION");
+				((Rectangle) n).setFill(Color.YELLOW);
 				return true;
 			}
+			return false;
 		}
-
 		return false;
-
 	}
 
 	private boolean collides(double minX, double minY, double nodeWidth, double nodeHeight) {
 
 		double xPos = this.getTranslateX();
 		double yPos = this.getTranslateY();
-		Node parent = this.getParent();
+		Parent parent = this.getParent();
 		while (!parent.getStyleClass().toString().equals("root")) {
 			xPos += parent.getTranslateX();
 			yPos += parent.getTranslateY();
 			parent = parent.getParent();
 		}
 
-		xPos += Math.cos(Math.toRadians(270 + getRotate())) * squareSize;
-		yPos += Math.sin(Math.toRadians(270 + getRotate())) * squareSize;
+		xPos += Math.cos(Math.toRadians(270 + getRotate())) * SQUARE_SIZE;
+		yPos += Math.sin(Math.toRadians(270 + getRotate())) * SQUARE_SIZE;
 
 		double width = this.getBoundsInLocal().getWidth();
 		double height = this.getBoundsInLocal().getHeight();
 
-		Rectangle r1 = new Rectangle(xPos+1, yPos, width, height);
+		Rectangle r1 = new Rectangle(xPos, yPos, width, height);
 		return r1.intersects(minX, minY, nodeWidth, nodeHeight);
 
 	}
 
 }
+
+enum State {
+	BUSY, FREE
+};
+
+enum Operation {
+	ROTATE_LEFT, ROTATE_RIGHT, MOVE_FORWARD
+};
 
 interface NotCollidable {
 }
