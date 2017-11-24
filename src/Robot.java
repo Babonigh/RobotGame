@@ -20,6 +20,8 @@ public class Robot extends Group {
 	private Color color;
 	private State state = State.FREE;
 	private ArrayList<Operation> stack = new ArrayList<Operation>();
+	
+	private Node moveObject = null;
 
 	private void choseColor() {
 		switch (NUMBER_OF_ROBOTS) {
@@ -36,7 +38,7 @@ public class Robot extends Group {
 			color = Color.PINK;
 			break;
 		case 5:
-			color = Color.SANDYBROWN;
+			color = Color.TURQUOISE;
 			break;
 		default:
 			color = Color.BLACK;
@@ -67,7 +69,7 @@ public class Robot extends Group {
 		Rectangle bg = new Rectangle();
 		bg.setWidth(SIZE);
 		bg.setHeight(SIZE);
-		bg.setFill(Color.ORANGE);
+		bg.setFill(Color.TRANSPARENT);
 
 		Arc body = new Arc();
 		body.setRadiusX(BODY_RADIUS);
@@ -242,8 +244,13 @@ public class Robot extends Group {
 			public void handle(long now) {
 				setTranslateX(Math.cos(Math.toRadians(270 + getRotate())) + getTranslateX());
 				setTranslateY(Math.sin(Math.toRadians(270 + getRotate())) + getTranslateY());
+				if(moveObject != null){
+					moveObject.setTranslateX(Math.cos(Math.toRadians(270 + getRotate())) + moveObject.getTranslateX());
+					moveObject.setTranslateY(Math.sin(Math.toRadians(270 + getRotate())) + moveObject.getTranslateY());
+					}
 				move++;
 				if (move == SQUARE_SIZE) {
+					moveObject = null;
 					setState(State.FREE);
 					this.stop();
 				}
@@ -277,10 +284,30 @@ public class Robot extends Group {
 			return false;
 		} else if (n instanceof NotCollidable) {
 			return false;
-		} else if (n instanceof Group) {
+		} else if (n instanceof Parent) {
 			for (Node childNode : ((Parent) n).getChildrenUnmodifiable()) {
 				if (checkCollision(childNode)) {
-					return true;
+					if(moveObject == null && childNode instanceof Moveable){
+						moveObject = childNode;
+						System.out.println("MOVEABLE");
+						this.setTranslateX(Math.cos(Math.toRadians(270 + this.getRotate()))*SQUARE_SIZE + this.getTranslateX());
+						this.setTranslateY(Math.sin(Math.toRadians(270 + this.getRotate()))*SQUARE_SIZE + this.getTranslateY());
+						if (checkCollision(this.getScene().getRoot())) {
+							System.out.println("TRUE");
+							moveObject = null;
+							this.setTranslateX(-Math.cos(Math.toRadians(270 + this.getRotate()))*SQUARE_SIZE + this.getTranslateX());
+							this.setTranslateY(-Math.sin(Math.toRadians(270 + this.getRotate()))*SQUARE_SIZE + this.getTranslateY());
+							return true;
+						}
+						else{
+							System.out.println("FALSE");
+							this.setTranslateX(-Math.cos(Math.toRadians(270 + this.getRotate()))*SQUARE_SIZE + this.getTranslateX());
+							this.setTranslateY(-Math.sin(Math.toRadians(270 + this.getRotate()))*SQUARE_SIZE + this.getTranslateY());
+							return false;
+						}
+					}
+					return true;						
+					
 				}
 			}
 		} else {
@@ -293,23 +320,21 @@ public class Robot extends Group {
 				minY += parent.getTranslateY();
 				parent = parent.getParent();
 			}
-
+			
 			double nodeWidth = n.getBoundsInLocal().getWidth();
 			double nodeHeight = n.getBoundsInLocal().getHeight();
-			minX += n.getBoundsInParent().getMinX();
-			minY += n.getBoundsInParent().getMinY();
+			minX += n.getBoundsInLocal().getMinX();
+			minY += n.getBoundsInLocal().getMinY();
 			
-//			if (n instanceof Circle) {
-//				minX -= ((Circle) n).getRadius();
-//				minY -= ((Circle) n).getRadius();
-//			}
+			if (n instanceof Circle) {
+				minX -= ((Circle) n).getRadius();
+				minY -= ((Circle) n).getRadius();
+			}
 			if (nodeHeight == 0 || nodeWidth == 0) {
 				return false;
 			}
 			if (this.collides(minX, minY, nodeWidth, nodeHeight)) {
-				System.out.println(n.getBoundsInParent().getMinX());
-				System.out.println("COLLISION");
-				((Rectangle) n).setFill(Color.YELLOW);
+				//((Rectangle) n).setFill(this.color);
 				return true;
 			}
 			return false;
@@ -334,6 +359,9 @@ public class Robot extends Group {
 		double width = this.getBoundsInLocal().getWidth();
 		double height = this.getBoundsInLocal().getHeight();
 
+//		System.out.println(xPos + " " + yPos + " " + width + " " + height);
+//		System.out.println(minX + " " + minY + " " + nodeWidth + " " + nodeHeight);
+		
 		Rectangle r1 = new Rectangle(xPos, yPos, width, height);
 		return r1.intersects(minX, minY, nodeWidth, nodeHeight);
 
@@ -352,5 +380,8 @@ enum Operation {
 interface NotCollidable {
 }
 
-class Eye extends Circle implements NotCollidable {
+interface Moveable{
+}
+
+class Eye extends Circle {
 }

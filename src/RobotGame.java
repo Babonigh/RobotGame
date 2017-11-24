@@ -71,6 +71,8 @@ public class RobotGame extends Scene {
 			return robot;
 		case 'o':
 			return new Circle(50);
+		case 'B':
+			return new Box();
 		default:
 			return new Rectangle();
 		}
